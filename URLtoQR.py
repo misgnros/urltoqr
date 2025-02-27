@@ -4,8 +4,10 @@ import io
 import re
 
 # Enter your Slack app token and signing secret here
-app = App(token="*****",
-		  signing_secret="*****")
+app = App(
+	token="*****",
+	signing_secret="*****"
+)
 
 @app.event("app_mention")
 def reply_qr(event,client,say):
