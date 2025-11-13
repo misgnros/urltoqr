@@ -1,90 +1,77 @@
-# urltoqr
+# URLtoQR
 
-URLを送ると2次元コード（QRコード）を返すSlackアプリ（Python製）
+A Slack app that returns a QR code when you send a URL.
 
-## 概要
+## Overview
 
-2次元コードをお手軽に作成する方法はいまやいくらでもある。
-ここで，少数のURLに対して2次元コードをつくりたい，またそれらを他人と簡単に共有したいとする。
-はじめから大量に作成する場合であれば何かしらのスクリプトやアプリで一括作成し，クラウドにアップロードなどして共有すればよいが，少数だといちいち作成→アップロードして共有は面倒でもある。
-そこで，URLを送ると2次元コードを返すSlackアプリ（Python製）をつくった。
+There are many easy ways to create QR codes these days. This app is intended for cases where you want to make a small number of QR codes and share them easily with others. If you need to generate many ones at once, it is better to use a script and share them from cloud service, but for a few URLs that process can be tedious (create → upload → share).
 
-使い方は2通り。
-1. スラッシュコマンドでURLを送ると，アプリからDMで2次元コードが送られてくる。
-2. チャンネル内でアプリをメンションしてURLを送ると，返信として2次元コードが送られてくる。
+This Slack app generates a QR code when you send a URL with the following two usage modes:
+1. Send a URL with the slash command, the app will DM you the QR code.
+2. Mention the app in a channel with a URL, the app replies in thread with the QR code.
 
-1つ目は他の人と共有しないパターン，2つ目は共有したいパターンを想定している。
+The first mode is for private use, the second is for sharing with others.
 
-## 環境
+## Environment
 
-- Python 3.11以上
-- Slackアプリの設定（Bot Token、Signing Secret）
-- ngrokなどによるローカル環境の外部公開（HTTPモードの場合）
+- Python 3.11 or later
+- Slack app configuration (Bot Token, Signing Secret)
+- Socket mode configuration (App Token)
+  - If using HTTP mode locally, make the app reachable from Slack (e.g. with ngrok)
 
-## セットアップ
+## Setup
 
-### リポジトリのクローン
+### Clone the repository
 
 ```bash
 git clone https://github.com/misgnros/urltoqr
 cd urltoqr
 ```
 
-### 依存関係
+### Dependencies
 
-下記にもとづいて各環境に適切なやり方でインストール。
+Install dependencies according to your environment. The project relies on:
 
-- `qrcode>=8.2`: QRコード生成
-- `slack-bolt>=1.26.0`: Slack Boltフレームワーク
-- `slack-sdk>=3.37.0`: Slack SDK
+- `qrcode>=8.2` : QR code generation
+- `slack-bolt>=1.26.0` : Slack Bolt framework
+- `slack-sdk>=3.37.0` : Slack SDK
 
-### 環境変数の設定
+### Environment variables
 
-以下の環境変数を設定する必要がある。
+Set the following environment variables:
 
-- `SLACK_BOT_TOKEN`: SlackアプリのBot User OAuth Token
-- `SLACK_SIGNING_SECRET`: SlackアプリのSigning Secret
-- `PORT`: アプリがリッスンするポート番号（オプション、デフォルト: 3000）
+- `SLACK_BOT_TOKEN`: the Bot User OAuth Token for your Slack app
+- `SLACK_SIGNING_SECRET`: the Signing Secret for your Slack app
+- `SLACK_APP_TOKEN`: the App Token for Socket mode (If needed)
+- `PORT`: optional — port for the app to listen on (default: 3000)
 
-例：
+### Slack app configuration
 
-```bash
-export SLACK_BOT_TOKEN="xoxb-your-token"
-export SLACK_SIGNING_SECRET="your-signing-secret"
-export PORT=3000
-```
-
-### Slackアプリの設定
-
-1. [Slack API](https://api.slack.com/apps)でアプリを作成
-2. Bot Token Scopesに以下を追加：
+1. Create an app at the Slack API: https://api.slack.com/apps
+2. Add the following Bot Token scopes:
    - `app_mentions:read`
    - `chat:write`
    - `commands`
    - `files:write`
    - `im:write`
-3. スラッシュコマンド`/qr`を登録
-4. Event Subscriptionsを有効化し、`app_mentions`イベントを購読
-5. ngrokなどでローカル環境を公開し、Request URLを設定
+3. Register the slash command `/qr`.
+4. Enable Event Subscriptions and subscribe to the `app_mentions` event.
+5. If using Socket mode, setup according to https://docs.slack.dev/tools/java-slack-sdk/guides/socket-mode/. Or running locally in HTTP mode, expose your local server (for example using ngrok) and set the Request URL accordingly in Slack.
 
-### アプリの起動
+### Starting the app
 
 ```bash
-python URLtoQR.py
+python3 URLtoQR.py
 ```
 
-## 使用方法
+## Usage
 
-以下，URLは`http...`という文字列としている。それ以外の形式の文字列はURLではないと判断され，エラーメッセージが返ってくるようになっている。
+The app interprets a URL as a string starting with `http...`. Any other string will not be treated as a URL and an error message will be returned.
 
-### スラッシュコマンド
+### Slash command
 
-スラッシュコマンドを有効にしておき，コマンド`/qr`でURLを送る。
+Use the slash command `/qr` followed by a URL. The app will send you a DM with a QR code for the URL.
 
-アプリからのDMで2次元コードが送られてくる。
+### Mention
 
-### メンション
-
-アプリをチャンネルに追加し，チャンネル内でアプリをメンションしてURLを送る。
-
-スレッドでの返信として2次元コードが送られてくる。
+Add the app to a channel and mention it with a URL in the message. The app will reply in the thread with the QR code.
